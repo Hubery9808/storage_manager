@@ -34,24 +34,25 @@ def add_item():
     def submit():
         room = entry_room.get()
         storage = entry_storage.get()
-        item = entry_item.get()
-        if room and storage and item:
+        items_string = entry_items.get()
+        if room and storage and items_string:
+            # 将输入的物品字符串按中文分号分割
+            items = [item.strip() for item in items_string.split('；') if item.strip()]
             data = load_data()
             if room not in data:
                 data[room] = {}
             if storage not in data[room]:
                 data[room][storage] = []
-            data[room][storage].append(item)
+            # 将物品添加到收纳处
+            data[room][storage].extend(items)
             save_data(data)
             messagebox.showinfo("成功", "物品已成功添加！")
-            add_window.destroy()
         else:
             messagebox.showwarning("输入错误", "请填写所有字段。")
 
-    add_window = tk.Toplevel(root)
+    add_window = tk.Toplevel(main_menu_window)
     add_window.title("添加物品")
 
-    # 使用 grid 布局
     tk.Label(add_window, text="房间：", anchor='e').grid(row=0, column=0, padx=10, pady=10, sticky='e')
     entry_room = tk.Entry(add_window)
     entry_room.grid(row=0, column=1, padx=10, pady=10, sticky='w')
@@ -60,9 +61,9 @@ def add_item():
     entry_storage = tk.Entry(add_window)
     entry_storage.grid(row=1, column=1, padx=10, pady=10, sticky='w')
 
-    tk.Label(add_window, text="物品：", anchor='e').grid(row=2, column=0, padx=10, pady=10, sticky='e')
-    entry_item = tk.Entry(add_window)
-    entry_item.grid(row=2, column=1, padx=10, pady=10, sticky='w')
+    tk.Label(add_window, text="物品（用中文分号隔开）：", anchor='e').grid(row=2, column=0, padx=10, pady=10, sticky='e')
+    entry_items = tk.Entry(add_window)
+    entry_items.grid(row=2, column=1, padx=10, pady=10, sticky='w')
 
     tk.Button(add_window, text="提交", command=submit).grid(row=3, column=0, columnspan=2, pady=10)
 
@@ -77,9 +78,8 @@ def find_item():
                     result = f"物品在房间'{room}'的收纳处'{storage}'中。"
                     break
         messagebox.showinfo("查找结果", result)
-        search_window.destroy()
 
-    search_window = tk.Toplevel(root)
+    search_window = tk.Toplevel(main_menu_window)
     search_window.title("查找物品")
 
     tk.Label(search_window, text="输入要查找的物品：", anchor='e').grid(row=0, column=0, padx=10, pady=10, sticky='e')
@@ -127,7 +127,7 @@ def clear_data():
                 messagebox.showwarning("错误", "未找到该房间或收纳处。")
         clear_window.destroy()
 
-    clear_window = tk.Toplevel(root)
+    clear_window = tk.Toplevel(main_menu_window)
     clear_window.title("清空数据")
 
     tk.Label(clear_window, text="选择操作：", anchor='e').grid(row=0, column=0, padx=10, pady=10, sticky='e')
@@ -157,30 +157,35 @@ def backup_data():
             messagebox.showinfo("成功", f"数据已备份到 {file_path}")
         backup_window.destroy()
 
-    backup_window = tk.Toplevel(root)
+    backup_window = tk.Toplevel(main_menu_window)
     backup_window.title("备份数据")
 
     tk.Button(backup_window, text="备份", command=submit).grid(row=0, column=0, padx=10, pady=10)
 
 def open_settings():
-    settings_window = tk.Toplevel(root)
+    settings_window = tk.Toplevel(main_menu_window)
     settings_window.title("设置")
 
     tk.Button(settings_window, text="清空数据", command=clear_data).grid(row=0, column=0, padx=10, pady=10)
     tk.Button(settings_window, text="备份数据", command=backup_data).grid(row=1, column=0, padx=10, pady=10)
 
-def open_main_menu():
-    main_menu = tk.Toplevel(root)
-    main_menu.title("主菜单")
+def main_menu():
+    global main_menu_window
+    main_menu_window = tk.Toplevel()
+    main_menu_window.title("主菜单")
 
-    tk.Button(main_menu, text="添加物品", command=add_item).grid(row=0, column=0, padx=10, pady=10)
-    tk.Button(main_menu, text="查找物品", command=find_item).grid(row=1, column=0, padx=10, pady=10)
-    tk.Button(main_menu, text="统计信息", command=show_statistics).grid(row=2, column=0, padx=10, pady=10)
-    tk.Button(main_menu, text="设置", command=open_settings).grid(row=3, column=0, padx=10, pady=10)
+    # 创建主菜单窗口的布局
+    tk.Button(main_menu_window, text="添加物品", command=add_item).grid(row=0, column=0, padx=10, pady=10, sticky='ew')
+    tk.Button(main_menu_window, text="查找物品", command=find_item).grid(row=1, column=0, padx=10, pady=10, sticky='ew')
+    tk.Button(main_menu_window, text="统计信息", command=show_statistics).grid(row=2, column=0, padx=10, pady=10, sticky='ew')
+    tk.Button(main_menu_window, text="设置", command=open_settings).grid(row=3, column=0, padx=10, pady=10, sticky='ew')
 
+    # 设置列的权重，使按钮居中
+    main_menu_window.grid_columnconfigure(0, weight=1)
+
+# 创建并显示主菜单窗口
 root = tk.Tk()
-root.title("物品管理系统")
-
-tk.Button(root, text="打开主菜单", command=open_main_menu).pack(pady=20)
+root.withdraw()  # 隐藏主窗口
+main_menu()
 
 root.mainloop()
